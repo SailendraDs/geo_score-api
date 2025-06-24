@@ -6,12 +6,12 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="geoscore",
     version="0.1.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Sailendra Damaraju",
+    author_email="admin@geoscore.in",
     description="A FastAPI-based service for scoring geographical entities",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/geoscore",
+    url="https://github.com/SailendraDs/geo_score-api",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.10",
