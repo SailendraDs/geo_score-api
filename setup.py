@@ -12,7 +12,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/SailendraDs/geo_score-api",
-    packages=find_packages(),
+    packages=find_packages(where='.'),
+    package_dir={"": "."},  
     classifiers=[
         "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: MIT License",
