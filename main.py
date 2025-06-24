@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from models.schemas import ScoreRequest, ScoreResponse
-from services.scorer import Scorer
+from .models.schemas import ScoreRequest, ScoreResponse
+from .services.scorer import Scorer
 
 # Initialize FastAPI app
 app = FastAPI(

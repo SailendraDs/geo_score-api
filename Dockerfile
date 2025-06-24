@@ -24,9 +24,9 @@ FROM python:3.10-slim
 WORKDIR /app
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
+ENV PYTHONPATH=/app \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
     PATH="/app/.local/bin:$PATH" \
     PORT=8000
 
@@ -45,7 +45,8 @@ COPY --chown=appuser:appuser . .
 
 # Install Python dependencies
 RUN pip install --user --no-cache-dir /wheels/* && \
-    rm -rf /wheels
+    rm -rf /wheels && \
+    pip install -e .
 
 # Create necessary directories
 RUN mkdir -p /app/data
