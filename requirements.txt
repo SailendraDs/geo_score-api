@@ -1,0 +1,19 @@
+# Core Dependencies
+fastapi>=0.68.0
+uvicorn>=0.15.0
+python-dotenv>=0.19.0
+pydantic>=1.8.0
+
+# Web & API
+requests>=2.28.0
+wikipedia-api>=0.5.8
+openai>=0.27.0
+google-api-python-client>=2.0.0
+beautifulsoup4>=4.9.3
+
+# Development
+pytest>=7.0.0
+black>=22.3.0
+flake8>=4.0.0
+mypy>=0.950.0
+httpx>=0.23.0  # Required for TestClient

@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: geoscore-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - RELOAD=true
+      - LOG_LEVEL=info
+      # Add your API keys here or in a .env file
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      # - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+    volumes:
+      - .:/app
+      # Mount the data directory to persist results
+      - ./data:/app/data
+    working_dir: /app
+    # For development with auto-reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # For production:
+    # command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+    
+  # Uncomment to add a PostgreSQL database
+  # db:
+  #   image: postgres:13-alpine
+  #   container_name: geoscore-db
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=geoscore
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
+  #   ports:
+  #     - "5432:5432"
+
+  # Uncomment to add pgAdmin for database management
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin
+  #   environment:
+  #     - PGADMIN_DEFAULT_EMAIL=admin@example.com
+  #     - PGADMIN_DEFAULT_PASSWORD=admin
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - db
+
+# Uncomment to persist database data
+# volumes:
+#   postgres_data:

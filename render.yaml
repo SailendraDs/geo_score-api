@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: geoscore-api
+    env: docker
+    build:
+      dockerfile: Dockerfile
+      build_command: >-
+        docker build -t $RENDER_IMAGE .
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
+      - key: LOG_LEVEL
+        value: info
+      - key: OPENAI_API_KEY
+        fromService:
+          name: geoscore-secrets
+          property: openai_api_key
+          type: secret
+      - key: GOOGLE_API_KEY
+        fromService:
+          name: geoscore-secrets
+          property: google_api_key
+          type: secret
+      - key: GOOGLE_CSE_ID
+        fromService:
+          name: geoscore-secrets
+          property: google_cse_id
+          type: secret
+    plan: free
+    numInstances: 1
+    healthCheckPath: /health
+    autoDeploy: yes
+    regions:
+      - oregon
+    resources:
+      memory: 512MB
+      cpu: 0.5
+
+# Uncomment and configure if you want to use a managed database
+# databases:
+#   - name: geoscore-db
+#     plan: free
+#     databaseName: geoscore
+#     user: geoscore
+#     ipAllowList:
+#       - 0.0.0.0/0
+
+# Secret group for sensitive configuration
+secretGroups:
+  - name: geoscore-secrets
+    secrets:
+      - key: openai_api_key
+        value: ${OPENAI_API_KEY}
+      - key: google_api_key
+        value: ${GOOGLE_API_KEY}
+      - key: google_cse_id
+        value: ${GOOGLE_CSE_ID}
