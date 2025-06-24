@@ -20,14 +20,9 @@ pip install -r requirements.txt
 # Set Python path to include current directory
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-# Run the FastAPI app with Uvicorn
-uvicorn geoscore.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload
-
 # Run the FastAPI application with Uvicorn
 echo "Starting GeoScore API..."
 uvicorn main:app \
     --host ${HOST:-0.0.0.0} \
     --port ${PORT:-8000} \
     --reload
-
-echo "Server stopped."

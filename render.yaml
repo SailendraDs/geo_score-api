@@ -37,6 +37,8 @@ services:
     resources:
       memory: 512MB
       cpu: 0.5
+    # Explicitly set the command to use
+    command: uvicorn main:app --host 0.0.0.0 --port $PORT
 
 # Uncomment and configure if you want to use a managed database
 # databases:
