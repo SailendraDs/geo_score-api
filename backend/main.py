@@ -3,14 +3,21 @@
 GeoScore - A FastAPI service for scoring geographical entities.
 """
 import os
+import sys
+from pathlib import Path
+
+# Add the current directory to Python path
+sys.path.insert(0, str(Path(__file__).parent))
+
 import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
-from .models.schemas import ScoreRequest, ScoreResponse
-from .services.scorer import Scorer
+# Use absolute imports
+from models.schemas import ScoreRequest, ScoreResponse
+from services.scorer import Scorer
 
 # Initialize FastAPI app
 app = FastAPI(
