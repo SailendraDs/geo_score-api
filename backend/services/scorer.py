@@ -7,12 +7,12 @@ import asyncio
 from datetime import datetime
 from typing import Dict, Any, Optional, List, Tuple
 
-# Use absolute imports
-from backend.models.schemas import GeoEntity, ScoreRequest, ScoreResponse, ScoreBreakdown
-from backend.utils.wiki_check import WikipediaChecker
-from backend.utils.llm_check import LLMChecker
-from backend.utils.linkedin_check import check_linkedin_presence
-from backend.utils.web_presence import check_web_presence
+# Use absolute imports without the 'backend.' prefix
+from models.schemas import GeoEntity, ScoreRequest, ScoreResponse, ScoreBreakdown
+from utils.wiki_check import WikipediaChecker
+from utils.llm_check import LLMChecker
+from utils.linkedin_check import check_linkedin_presence
+from utils.web_presence import check_web_presence
 
 class Scorer:
     """Handles scoring of geographical entities."""
