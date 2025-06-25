@@ -18,9 +18,12 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 # Copy application code
 COPY . .
 
+<<<<<<< HEAD
 # Set PYTHONPATH to include the current directory
 ENV PYTHONPATH=/app:$PYTHONPATH
 
+=======
+>>>>>>> a7333b61e6e22ec36d093c23e0574730aa8db091
 # Install the package in development mode
 RUN pip install -e .
 
