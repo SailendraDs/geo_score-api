@@ -33,7 +33,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://geoscore.vercel.app",  # Production frontend
-        "http://localhost:5173",        # Local development
+        "https://geoscore.in",        # Local development
         "http://localhost:8000",        # Local backend
     ],
     allow_credentials=True,
