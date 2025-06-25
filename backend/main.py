@@ -31,7 +31,11 @@ app = FastAPI(
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://geoscore.vercel.app",  # Production frontend
+        "http://localhost:5173",        # Local development
+        "http://localhost:8000",        # Local backend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
