@@ -1,36 +1,34 @@
+# Use official Python image as base
 FROM python:3.10-slim
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Create a non-root user and working directory
+RUN useradd -m appuser && \
+    mkdir -p /app && \
+    chown appuser:appuser /app
+
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy setup files first to leverage Docker cache
-COPY setup.py .
+# Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install Python dependencies and package in development mode
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -e .
+# Install dependencies as root, then switch to non-root user
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy the rest of the application
+COPY --chown=appuser:appuser . .
 
-# Set PYTHONPATH to include the current directory
-ENV PYTHONPATH=/app
-
-# Create necessary directories
-RUN mkdir -p /app/data && \
-    touch /app/data/__init__.py
-
-# Use a non-root user
-RUN useradd -m appuser && \
-    chown -R appuser:appuser /app
-
+# Switch to non-root user
 USER appuser
+
+# Install the package in development mode
+RUN pip install --no-cache-dir -e .
 
 # Expose the port the app runs on
 EXPOSE 8000
