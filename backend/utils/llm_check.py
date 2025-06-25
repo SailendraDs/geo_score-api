@@ -71,22 +71,27 @@ class LLMChecker:
                 continue
     
     def _create_prompt(self, entity: GeoEntity) -> str:
-        """Create a prompt for the LLM to verify the entity."""
-        return f"""Please analyze the geographical entity: {entity.name}
-        
-Provide a verification with the following:
-1. Existence: Does this appear to be a valid geographical location? (Yes/No)
-2. Type: What type of location is it? (e.g., city, country, landmark, etc.)
-3. Confidence: On a scale of 0-100, how confident are you in your assessment?
-4. Details: A brief explanation of your assessment.
+        """Create a prompt for the LLM to assess brand recognition and familiarity."""
+        return f"""
+You are evaluating how well-known the following brand or company is:
 
-Format your response as a JSON object with the following keys:
+Brand Name: {entity.name}
+
+Please provide:
+
+1. How well do you know this brand?
+2. Type of the entity (company, product, startup, etc.).
+3. Mention 2-3 known facts about this brand.
+4. Confidence score (0-100) based on your familiarity.
+
+Respond ONLY in JSON like this:
 {{
-  "exists": boolean,
-  "type": string,
-  "confidence": number (0-100),
-  "details": string
-}}"""
+  "exists": true/false,
+  "type": "company/startup/product",
+  "confidence": 0-100,
+  "details": "Brief explanation"
+}}
+"""
     
     def _parse_response(self, response: Any, entity_name: str) -> Dict[str, Any]:
         """Parse the LLM response into a structured format."""

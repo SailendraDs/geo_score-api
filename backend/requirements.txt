@@ -10,6 +10,7 @@ wikipedia-api>=0.5.8
 openai>=0.27.0
 google-api-python-client>=2.0.0
 beautifulsoup4>=4.9.3
+aiosqlite>=0.18.0
 
 # Development
 pytest>=7.0.0

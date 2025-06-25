@@ -5,19 +5,22 @@ GeoScore - A FastAPI service for scoring geographical entities.
 import os
 import sys
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 # Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
+from datetime import datetime
 
 # Use absolute imports
 from models.schemas import ScoreRequest, ScoreResponse
 from services.scorer import Scorer
+from data.db_utils import save_scan, get_scan, get_all_scans
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -33,7 +36,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://geoscore.vercel.app",  # Production frontend
-        "https://geoscore.in",        # Local development
+        "https://geoscore.in",        # Production
         "http://localhost:8000",        # Local backend
     ],
     allow_credentials=True,
@@ -44,11 +47,17 @@ app.add_middleware(
 # Initialize the scorer
 scorer = Scorer()
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup."""
+    from data.db_utils import setup_db
+    await setup_db()
+    print("Database initialized")
+
 @app.get("/health", status_code=status.HTTP_200_OK)
 async def health_check() -> dict:
     """Health check endpoint."""
-    return {"status": "healthy"}
-
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
 @app.post("/check-score", response_model=ScoreResponse, status_code=status.HTTP_200_OK)
 async def check_score(payload: ScoreRequest) -> ScoreResponse:
@@ -68,6 +77,18 @@ async def check_score(payload: ScoreRequest) -> ScoreResponse:
             url=payload.url
         )
         
+        # Save the scan result to the database
+        scan_data = {
+            'scan_id': result.scan_id,
+            'brand_name': payload.brand_name,
+            'url': payload.url,
+            'score': result.score,
+            'score_breakdown': result.score_breakdown.dict(),
+            'timestamp': result.timestamp,
+            'metadata': result.metadata
+        }
+        await save_scan(scan_data)
+        
         return result
         
     except ValidationError as e:
@@ -81,7 +102,6 @@ async def check_score(payload: ScoreRequest) -> ScoreResponse:
             detail=f"An error occurred while processing your request: {str(e)}"
         )
 
-
 @app.get("/results/{scan_id}", response_model=ScoreResponse)
 async def get_result(scan_id: str):
     """
@@ -93,7 +113,7 @@ async def get_result(scan_id: str):
     Returns:
         The stored ScoreResponse or 404 if not found
     """
-    result = scorer.get_result(scan_id)
+    result = await get_scan(scan_id)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -101,12 +121,81 @@ async def get_result(scan_id: str):
         )
     return result
 
+@app.get("/history", response_model=List[Dict[str, Any]])
+async def get_history(limit: int = Query(10, ge=1, le=100, description="Number of results to return")):
+    """
+    Get scan history.
+    
+    Args:
+        limit: Maximum number of results to return (1-100)
+        
+    Returns:
+        List of recent scan results
+    """
+    try:
+        return await get_all_scans(limit=limit)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving scan history: {str(e)}"
+        )
+
+@app.get("/suggestions/{scan_id}", response_model=Dict[str, Any])
+async def get_suggestions(scan_id: str):
+    """
+    Get improvement suggestions for a scan.
+    
+    Args:
+        scan_id: The ID of the scan to get suggestions for
+        
+    Returns:
+        Dictionary containing suggestions for improvement
+    """
+    try:
+        # Get the scan result
+        scan = await get_scan(scan_id)
+        if not scan:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No scan found with ID: {scan_id}"
+            )
+        
+        # Generate suggestions based on the score breakdown
+        breakdown = scan.get('score_breakdown', {})
+        suggestions = []
+        
+        if breakdown.get('wikipedia_presence', 0) < 50:
+            suggestions.append("Consider creating or improving your Wikipedia page.")
+        
+        if breakdown.get('llm_recall', 0) < 50:
+            suggestions.append("Improve your online mentions and media coverage for better LLM recall.")
+        
+        if breakdown.get('platform_visibility', 0) < 50:
+            suggestions.append("Strengthen your LinkedIn and developer profiles.")
+        
+        if breakdown.get('web_presence', 0) < 50:
+            suggestions.append("Increase website SEO and digital PR efforts.")
+        
+        return {
+            "scan_id": scan_id,
+            "suggestions": suggestions,
+            "score": scan.get('score', 0),
+            "brand_name": scan.get('brand_name', 'Unknown')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating suggestions: {str(e)}"
+        )
 
 if __name__ == "__main__":
     # Run the FastAPI application
     uvicorn.run(
         "main:app",
-        host=os.getenv("HOST", "0.0.0.0"),
+        host="0.0.0.0",
         port=int(os.getenv("PORT", 8000)),
-        reload=os.getenv("RELOAD", "true").lower() == "true"
+        reload=os.getenv("DEBUG", "false").lower() == "true"
     )

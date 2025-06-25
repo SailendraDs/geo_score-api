@@ -6,7 +6,7 @@ import uuid
 import asyncio
 from datetime import datetime
 from typing import Dict, Any, Optional, List, Tuple
-
+from data.db_utils import save_scan
 # Use absolute imports without the 'backend.' prefix
 from models.schemas import GeoEntity, ScoreRequest, ScoreResponse, ScoreBreakdown
 from utils.wiki_check import WikipediaChecker
@@ -21,17 +21,25 @@ class Scorer:
         self.wiki_checker = WikipediaChecker()
         self.llm_checker = LLMChecker()
         self.results: Dict[str, Any] = {}
+        
+        # Define weights for each scoring component
+        self.weights = {
+            'wikipedia': 0.3,  # 30% weight
+            'llm': 0.3,        # 30% weight
+            'linkedin': 0.2,   # 20% weight
+            'web': 0.2         # 20% weight
+        }
     
     async def calculate_score(self, brand_name: str, url: str) -> ScoreResponse:
         """
-        Calculate a GEO score for the given brand.
+        Calculate a GEO score for the given brand using weighted scoring.
         
         Args:
             brand_name: Name of the brand to score
             url: URL of the brand's website
             
         Returns:
-            ScoreResponse: The scoring result
+            ScoreResponse: The scoring result with weighted score
         """
         # Create a GeoEntity
         entity = GeoEntity(name=brand_name, location=None, metadata={'url': url})
@@ -50,18 +58,17 @@ class Scorer:
             wiki_task, llm_task, linkedin_task, web_task
         )
         
-        # Calculate final score (simple average for now)
-        scores = [
-            wiki_result['score'],
-            llm_result['score'],
-            linkedin_result['score'],
-            web_result['score']
-        ]
-        final_score = int(sum(scores) / len(scores))
+        # Calculate weighted score
+        weighted_score = int(
+            wiki_result['score'] * self.weights['wikipedia'] +
+            llm_result['score'] * self.weights['llm'] +
+            linkedin_result['score'] * self.weights['linkedin'] +
+            web_result['score'] * self.weights['web']
+        )
         
-        # Create response
+        # Create response with weighted score
         response = ScoreResponse(
-            score=final_score,
+            score=weighted_score,
             score_breakdown=ScoreBreakdown(
                 llm_recall=llm_result['score'],
                 wikipedia_presence=wiki_result['score'],
@@ -77,7 +84,8 @@ class Scorer:
                     'linkedin': linkedin_result['details'],
                     'web': web_result['details']
                 },
-                'entity': entity.dict()
+                'entity': entity.dict(),
+                'weights': self.weights  # Include weights in metadata for reference
             }
         )
         
@@ -101,19 +109,6 @@ class Scorer:
                 }
             }
     
-    def _store_result(self, result: ScoreResponse) -> None:
-        """Store the scoring result."""
-        self.results[result.scan_id] = result.dict()
-        
-        # Also save to file (in production, consider using a database)
-        try:
-            import os
-            os.makedirs('data', exist_ok=True)
-            with open('data/temp_results.json', 'w') as f:
-                json.dump(self.results, f, indent=2)
-        except Exception as e:
-            print(f"Warning: Failed to save results: {str(e)}")
-    
     def get_result(self, scan_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve a stored result by scan ID."""
         return self.results.get(scan_id)
@@ -121,3 +116,23 @@ class Scorer:
     def get_all_results(self) -> Dict[str, Any]:
         """Retrieve all stored results."""
         return self.results
+
+
+# In the Scorer class, update the _store_result method:
+async def _store_result(self, result: ScoreResponse) -> None:
+    """
+    Store the scan result in the database.
+    
+    Args:
+        result: The ScoreResponse to store
+    """
+    scan_data = {
+        'scan_id': result.scan_id,
+        'brand_name': result.metadata['entity']['name'],
+        'url': result.metadata['entity']['metadata'].get('url'),
+        'score': result.score,
+        'score_breakdown': result.score_breakdown.dict(),
+        'timestamp': result.timestamp,
+        'metadata': result.metadata
+    }
+    await save_scan(scan_data)
