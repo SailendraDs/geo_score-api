@@ -5,7 +5,7 @@ import os
 import openai
 import logging
 from typing import Dict, Any, Optional
-from ..models.schemas import GeoEntity
+from backend.models.schemas import GeoEntity
 from dotenv import load_dotenv
 
 # Configure logging
