@@ -7,9 +7,6 @@ import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-# Add the current directory to Python path
-sys.path.insert(0, str(Path(__file__).parent))
-
 import uvicorn
 from fastapi import FastAPI, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,10 +14,10 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from datetime import datetime
 
-# Use absolute imports
-from backend.models.schemas import ScoreRequest, ScoreResponse
-from backend.services.scorer import Scorer
-from backend.data.db_utils import save_scan, get_scan, get_all_scans
+# Use relative imports
+from .models.schemas import ScoreRequest, ScoreResponse
+from .services.scorer import Scorer
+from .data.db_utils import save_scan, get_scan, get_all_scans
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -50,7 +47,7 @@ scorer = Scorer()
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on startup."""
-    from backend.data.db_utils import setup_db
+    from .data.db_utils import setup_db
     await setup_db()
     print("Database initialized")
 
@@ -197,5 +194,5 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", 8000)),
-        reload=os.getenv("DEBUG", "false").lower() == "true"
+        reload=True
     )
