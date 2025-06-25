@@ -34,6 +34,8 @@ setup(
         "google-api-python-client>=2.0.0,<3.0.0",
         "python-multipart>=0.0.5,<1.0.0",
         "fake-useragent>=1.1.3,<2.0.0",
+        'aiosqlite>=0.18.0',
+        'httpx>=0.23.0',
     ],
     extras_require={
         "dev": [

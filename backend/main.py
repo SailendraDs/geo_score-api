@@ -18,9 +18,9 @@ from pydantic import ValidationError
 from datetime import datetime
 
 # Use absolute imports
-from models.schemas import ScoreRequest, ScoreResponse
-from services.scorer import Scorer
-from data.db_utils import save_scan, get_scan, get_all_scans
+from backend.models.schemas import ScoreRequest, ScoreResponse
+from backend.services.scorer import Scorer
+from backend.data.db_utils import save_scan, get_scan, get_all_scans
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -50,7 +50,7 @@ scorer = Scorer()
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on startup."""
-    from data.db_utils import setup_db
+    from backend.data.db_utils import setup_db
     await setup_db()
     print("Database initialized")
 

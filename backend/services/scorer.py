@@ -6,8 +6,8 @@ import uuid
 import asyncio
 from datetime import datetime
 from typing import Dict, Any, Optional, List, Tuple
-from data.db_utils import save_scan
-# Use absolute imports without the 'backend.' prefix
+from backend.data.db_utils import save_scan
+
 from models.schemas import GeoEntity, ScoreRequest, ScoreResponse, ScoreBreakdown
 from utils.wiki_check import WikipediaChecker
 from utils.llm_check import LLMChecker

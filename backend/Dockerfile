@@ -8,24 +8,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
+# Copy setup files first to leverage Docker cache
+COPY setup.py .
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies and package in development mode
 RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir uvicorn
+    pip install --no-cache-dir -e .
 
 # Copy application code
 COPY . .
 
 # Set PYTHONPATH to include the current directory
-ENV PYTHONPATH=/app:$PYTHONPATH
-
-# Install the package in development mode
-RUN pip install -e .
+ENV PYTHONPATH=/app
 
 # Create necessary directories
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && \
+    touch /app/data/__init__.py
 
 # Use a non-root user
 RUN useradd -m appuser && \
