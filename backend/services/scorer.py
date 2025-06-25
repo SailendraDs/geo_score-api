@@ -6,8 +6,9 @@ import uuid
 import asyncio
 from datetime import datetime
 from typing import Dict, Any, Optional, List, Tuple
-from backend.data.db_utils import save_scan
 
+# Use absolute imports from the package root
+from data.db_utils import save_scan
 from models.schemas import GeoEntity, ScoreRequest, ScoreResponse, ScoreBreakdown
 from utils.wiki_check import WikipediaChecker
 from utils.llm_check import LLMChecker
@@ -109,6 +110,24 @@ class Scorer:
                 }
             }
     
+    async def _store_result(self, result: ScoreResponse) -> None:
+        """
+        Store the scan result in the database.
+        
+        Args:
+            result: The ScoreResponse to store
+        """
+        scan_data = {
+            'scan_id': result.scan_id,
+            'brand_name': result.metadata['entity']['name'],
+            'url': result.metadata['entity']['metadata'].get('url'),
+            'score': result.score,
+            'score_breakdown': result.score_breakdown.dict(),
+            'timestamp': result.timestamp,
+            'metadata': result.metadata
+        }
+        await save_scan(scan_data)
+    
     def get_result(self, scan_id: str) -> Optional[Dict[str, Any]]:
         """Retrieve a stored result by scan ID."""
         return self.results.get(scan_id)
@@ -116,23 +135,3 @@ class Scorer:
     def get_all_results(self) -> Dict[str, Any]:
         """Retrieve all stored results."""
         return self.results
-
-
-# In the Scorer class, update the _store_result method:
-async def _store_result(self, result: ScoreResponse) -> None:
-    """
-    Store the scan result in the database.
-    
-    Args:
-        result: The ScoreResponse to store
-    """
-    scan_data = {
-        'scan_id': result.scan_id,
-        'brand_name': result.metadata['entity']['name'],
-        'url': result.metadata['entity']['metadata'].get('url'),
-        'score': result.score,
-        'score_breakdown': result.score_breakdown.dict(),
-        'timestamp': result.timestamp,
-        'metadata': result.metadata
-    }
-    await save_scan(scan_data)

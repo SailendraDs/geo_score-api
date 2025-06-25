@@ -61,9 +61,7 @@ htmlcov/
 .pytest_cache/
 
 # Docker
-.dockerignore
-Dockerfile*
-docker-compose*.yml
+
 
 # Jupyter Notebook
 .ipynb_checkpoints
